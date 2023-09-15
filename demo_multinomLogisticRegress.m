@@ -36,7 +36,7 @@ xtck = 0:25:100;
 subplot(231);
 imagesc(1:nclass, 1:nx, wTrue);
 ylabel('input dimension'); xlabel('class');
-title('weight matrix');
+title('weights');
 set(gca,'xtick',xtck);
 
 subplot(232); imagesc(pclass); 
@@ -75,15 +75,18 @@ xtck = 0:25:100;
 subplot(231);
 imagesc(1:nclass, 1:nx, wTrueShifted);
 ylabel('input dimension'); xlabel('class');
-title('weight matrix');
+title('true weights');
 set(gca,'xtick',xtck);
 
 subplot(234);
 imagesc(1:nclass, 1:nx, wML);
+title('inferred weights'); 
+
 
 subplot(2,3,5:6);
 plot(1:nx*nclass, wTrueShifted(:), 1:nx*nclass, wML(:));
 legend('true', 'estim', 'location', 'northwest');
+title('true and recovered weights')
 
 % Report results:
 R2 = 1-sum((wTrueShifted(:)-wML(:)).^2)/sum(wTrueShifted(:).^2);
