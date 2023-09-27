@@ -1,14 +1,16 @@
-function [negL,dnegL,H] = neglogli_multinomGLM(wts,X,Y)
-% [negL,dnegL,H] = neglogli_multinomGLM(wts,X,Y)
+function [negL,dnegL,H] = neglogli_multinomGLM_reduced(wts,X,Y)
+% [negL,dnegL,H] = neglogli_multinomGLM_reduced(wts,X,Y)
 %
-% Negative log-likelihood under multinomial logistic regression model,
-% plus gradient and Hessian
+% Negative log-likelihood under multinomial logistic regression model with
+% "reduced" parametrization so that weights are identifiable. 
+% (Class-1 weights assumed to be the all-zeros vector)
 %
 % Inputs:
 % -------
-%    wts [d*(k-1),1] - weights mapping stimulus to each of m classes
+%    wts [d*(k-1),1] - weights mapping stimulus to classes 2 to k
 %      X [T,d]       - design matrix of regressors
-%      Y [T,k]       - output (one-hot vector on each row indicating class)
+%      Y [T,k-1]     - class (1-hot vector on each row indicating class,
+%                             or all-zeros representing class 1) 
 %
 % Outputs:
 % --------
@@ -18,12 +20,11 @@ function [negL,dnegL,H] = neglogli_multinomGLM(wts,X,Y)
 %
 % Details: 
 % --------
-% Describes mapping from vectors x to a discrete variable y taking values
-% from one of k classes:
+% Classification model that maps vectors x to one of k classes
 %
-%     P(Y = j|x) = 1/Z exp(x*w_j)
+%     P(Y = j | x) = 1/Z exp(x * w_j)
 %
-% where normalzer Z = sum_i=1^k  exp(x*w_i)
+% where normalizer Z = sum_i=1^k  exp(x*w_i)
 %      
 % Notes:
 % ------
@@ -34,13 +35,12 @@ function [negL,dnegL,H] = neglogli_multinomGLM(wts,X,Y)
 %   should include a column of 1's to incorporate a constant.
 
 % Process inputs
-nT = size(X,1);      % # of trials
-nX = size(X,2);      % # of predictors (input dimensionality)
-nObs = size(Y,2);    % # of observation classes minus 1
-nwtot = nX*(nObs-1); % total number of weights in the model
+[nT,nX] = size(X);      % # of trials, # of predictors (# input dims)
+nClass = size(Y,2);    % # of observation classes minus 1
+nwtot = nX*(nClass-1); % total number of weights in the model
 
 % Reshape GLM weights into a matrix
-ww = reshape(wts,nX,nObs-1); 
+ww = reshape(wts,nX,nClass-1); 
 
 % Compute projection of stimuli onto weights
 xproj = X*ww;
@@ -71,7 +71,7 @@ if nargout == 3 % ============ compute Hessian ===========================
     
     % Insert center-diagonal blocks of Hessian
     H = zeros(nwtot);
-    for jj = 1:(nObs-1)
+    for jj = 1:(nClass-1)
         inds = (jj-1)*nX+1:jj*nX;
         H(inds,inds) = XXdf(:,inds);
     end
@@ -82,12 +82,9 @@ if nargout == 3 % ============ compute Hessian ===========================
     % ----------------------------------------------------------
     % % Equivalent version (w/o for loop; near-identical speed)
     % ----------------------------------------------------------
-    % Xdf = reshape(bsxfun(@times,X,reshape(df,[],1,nclass)),[],nw); % bsxfun version
-    % XXdf = mat2cell(X'*Xdf,nx,nx*ones(1,nclass));
+    % Xdf = reshape(bsxfun(@times,X,reshape(df,[],1,nClass-1)),[],nwtot); % bsxfun version
+    % XXdf = mat2cell(X'*Xdf,nX,nX*ones(1,nClass-1));
     % H = blkdiag(XXdf{:}) - Xdf'*Xdf; % add off-diagonal part
     % ----------------------------------------------------------
         
 end
-
-
-% 
