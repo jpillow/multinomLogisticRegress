@@ -7,33 +7,24 @@
 %     cd ..; setpaths; % move up a directory and call setpaths
 % end
 
-% --- Set weights for multinomial LR model  --------
-
 % set up weights
-nX = 10; % number of input dimensions 
-nClass = 5; % number of output classes
-nSamp = 5e3;
+nxdim = 10;  % number of input dimensions 
+nclass = 5;  % number of output classes
+nsamp = 2e3; % number of samples to draw
 
 % Sample weights from a Gaussian
-wTrue = randn(nX,nClass);
+wtrue = randn(nxdim,nclass)/2;
 
-% -- Make inputs and generate class label data -----
-xinput = 1*(randn(nSamp,nX)); % inputs by time
-xproj = xinput*wTrue; % output of linear weights
+% make inputs 
+xinput = randn(nsamp,nxdim); % inputs by time
 
-% Compute probability of each class
-pclass = exp(xproj)./sum(exp(xproj),2);
-
-% Sample outcomes y from multinomial
-pcum = cumsum(pclass,2); % cumulative probability
-rvals = rand(nSamp,1); % random variables
-yout = (rvals<pcum) & (rvals >=[zeros(nSamp,1),pcum(:,1:nClass-1)]);
-yout2 = sparse(yout);
+% Sample class labels from model
+[yy,pclass] = sample_multinomGLM(xinput,wtrue);
 
 %  --------- Make plots --------
 xtck = 0:25:100;
 subplot(231);
-imagesc(1:nClass, 1:nX, wTrue);
+imagesc(1:nclass, 1:nxdim, wtrue);
 ylabel('input dimension'); xlabel('class');
 title('weights');
 set(gca,'xtick',xtck);
@@ -42,17 +33,16 @@ subplot(232); imagesc(pclass);
 title('p(class)'); ylabel('trial #'); 
 xlabel('class');
 
-subplot(233); imagesc(yout); 
+subplot(233); imagesc(yy); 
 title('observed class'); ylabel('trial #');
 xlabel('class');
 
-%% 2. Compute ML estimate of weights (no GP prior)
+%% 2. Compute ML estimate of weights 
 
-lfun = @(w)(neglogli_multinomGLM_reduced(w,xinput,yout)); % neglogli function handle
-lfun2 = @(w)(neglogli_multinomGLM_reduced(w,xinput,yout2)); % neglogli function handle
+lfun = @(w)(neglogli_multinomGLM_reduced(w,xinput,yy)); % neglogli function handle
 
 % Set initial weights
-w0 = randn(nX,nClass-1); 
+w0 = randn(nxdim,nclass-1); 
 
 % Check accuracy of Hessian and Gradient (if desired)
 HessCheck(lfun,w0(:));
@@ -65,35 +55,32 @@ fprintf('\n---------------------------------------------------------------------
 fprintf('Computing ML estimate of multinomial logistic regression model weights...\n');
 fprintf('-------------------------------------------------------------------------\n');
 
-tic;
 wMLreduced = fminunc(lfun,w0(:),opts); % optimize negative log-posterior
-toc;
 
 %% 3. Reshape weights and compare to true weights
-wML = [zeros(nX,1), reshape(wMLreduced,nX,nClass-1)]; % reshape into matrix
+wML = [zeros(nxdim,1), reshape(wMLreduced,nxdim,nclass-1)]; % reshape into matrix
 
 % normalize each column to have zero mean, just for plotting purposes
-wTrueShifted = wTrue-wTrue(:,1);
+wtrue_reduced = wtrue-wtrue(:,1);
 
 %  --------- Make plots --------
 xtck = 0:25:100;
 subplot(231);
-imagesc(1:nClass, 1:nX, wTrueShifted);
+imagesc(1:nclass, 1:nxdim, wtrue_reduced);
 ylabel('input dimension'); xlabel('class');
 title('true weights');
 set(gca,'xtick',xtck);
 
 subplot(234);
-imagesc(1:nClass, 1:nX, wML);
+imagesc(1:nclass, 1:nxdim, wML);
 title('inferred weights'); 
 
 
 subplot(2,3,5:6);
-plot(1:nX*nClass, wTrueShifted(:), 1:nX*nClass, wML(:));
+plot(1:nxdim*nclass, wtrue_reduced(:), 1:nxdim*nclass, wML(:));
 legend('true', 'estim', 'location', 'northwest');
 title('true and recovered weights')
 
 % Report results:
-R2 = 1-sum((wTrueShifted(:)-wML(:)).^2)/sum(wTrueShifted(:).^2);
+R2 = 1-sum((wtrue_reduced(:)-wML(:)).^2)/sum(wtrue_reduced(:).^2);
 fprintf('\nWeight recovery R^2: %0.3f\n',R2);
-
