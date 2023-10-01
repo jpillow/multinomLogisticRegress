@@ -36,11 +36,11 @@ function [negL,dnegL,H] = neglogli_multinomGLM_reduced(wts,X,Y)
 
 % Process inputs
 [nT,nX] = size(X);      % # of trials, # of predictors (# input dims)
-nClass = size(Y,2);    % # of observation classes minus 1
-nwtot = nX*(nClass-1); % total number of weights in the model
+nclass = size(Y,2);    % # of observation classes minus 1
+nwtot = nX*(nclass-1); % total number of weights (free params) in model
 
 % Reshape GLM weights into a matrix
-ww = reshape(wts,nX,nClass-1); 
+ww = reshape(wts,nX,nclass-1); 
 
 % Compute projection of stimuli onto weights
 xproj = X*ww;
@@ -71,7 +71,7 @@ if nargout == 3 % ============ compute Hessian ===========================
     
     % Insert center-diagonal blocks of Hessian
     H = zeros(nwtot);
-    for jj = 1:(nClass-1)
+    for jj = 1:(nclass-1)
         inds = (jj-1)*nX+1:jj*nX;
         H(inds,inds) = XXdf(:,inds);
     end
