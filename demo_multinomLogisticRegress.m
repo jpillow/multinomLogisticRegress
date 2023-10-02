@@ -20,12 +20,10 @@ xinput = randn(nsamp,nxdim); % inputs by time
 [yy,pclass] = sample_multinomGLM(xinput,wtrue);
 
 %  --------- Make plots --------
-xtck = 0:25:100;
 subplot(231);
 imagesc(1:nclass, 1:nxdim, wtrue);
 ylabel('input dimension'); xlabel('class');
 title('weights');
-set(gca,'xtick',xtck);
 
 subplot(232); imagesc(pclass); 
 title('p(class)'); ylabel('trial #'); 
@@ -41,10 +39,10 @@ xlabel('class');
 w0 = randn(nxdim,nclass); % full weights
 w0red = w0(:,2:end)-w0(:,1); % reduced weights
 
-lfun_red = @(w)(neglogli_multinomGLM_reduced(w,xinput,yy)); % neglogli function handle (reduced)
+lfun1 = @(w)(neglogli_multinomGLM_reduced(w,xinput,yy)); % neglogli function handle (reduced)
 
 % Check accuracy of Hessian and Gradient (if desired)
-HessCheck(lfun_red,w0red(:));
+HessCheck(lfun1,w0red(:));
 
 % Set optimization parameters and perform optimization
 opts = optimoptions('fminunc','algorithm','trust-region','SpecifyObjectiveGradient',true,...
@@ -54,20 +52,20 @@ fprintf('\n---------------------------------------------------------------------
 fprintf('Computing "reduced" ML estimate of multinomial logistic regression weights...\n');
 fprintf('-------------------------------------------------------------------------\n');
 
-wMLred = fminunc(lfun_red,w0red(:),opts); % optimize negative log-posterior
+wML1 = fminunc(lfun1,w0red(:),opts); % optimize negative log-posterior
 
 %% 3. Compute ML estimate of weights, full parametrization
 
-lfun_full = @(w)(neglogli_multinomGLM_full(w,xinput,yy)); % neglogli function handle (full)
+lfun2 = @(w)(neglogli_multinomGLM_full(w,xinput,yy)); % neglogli function handle (full)
 
 % Check accuracy of Hessian and Gradient (if desired)
-HessCheck(lfun_full,w0(:));
+HessCheck(lfun2,w0(:));
 
 fprintf('\n-------------------------------------------------------------------------\n');
 fprintf('Computing "full" ML estimate of multinomial logistic regression weights...\n');
 fprintf('-------------------------------------------------------------------------\n');
 
-wMLfull = fminunc(lfun_full,w0(:),opts); % optimize negative log-posterior
+wML2 = fminunc(lfun2,w0(:),opts); % optimize negative log-posterior
 
 %% 4.Compare fits to true weights
 
@@ -75,21 +73,16 @@ wMLfull = fminunc(lfun_full,w0(:),opts); % optimize negative log-posterior
 wtrue_reduced = wtrue-wtrue(:,1); % substract off class-1 weights
 
 % Reshape fitted weights into matrices
-wMLred = [zeros(nxdim,1), reshape(wMLred,nxdim,nclass-1)]; % reshape reduced weights into matrix
-wMLfull = reshape(wMLfull,nxdim,nclass); % reshape full weights into matrix
+wMLred = [zeros(nxdim,1), reshape(wML1,nxdim,nclass-1)]; % reshape reduced weights into matrix
+wMLfull = reshape(wML2,nxdim,nclass); % reshape full weights into matrix
 wMLfull = wMLfull - wMLfull(:,1); % substract off class-1 weights
 
 
 %  --------- Make plots --------
 
-subplot(231);
-imagesc(1:nclass, 1:nxdim, wtrue_reduced);
-ylabel('input dimension'); xlabel('class');
-title('true weights');
-
 subplot(234);
 imagesc(1:nclass, 1:nxdim, wMLfull);
-title('inferred weights (reduced)'); 
+title('ML inferred weights (reduced)'); 
 
 subplot(2,3,5:6);
 nw = nxdim*nclass; % number of total weights

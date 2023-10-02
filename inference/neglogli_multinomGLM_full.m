@@ -1,5 +1,5 @@
 function [negL,dnegL,H] = neglogli_multinomGLM_full(wts,X,Y)
-% [negL,dnegL,H] = neglogli_multinomGLM_overp(wts,X,Y)
+% [negL,dnegL,H] = neglogli_multinomGLM_full(wts,X,Y)
 %
 % Compute negative log-likelihood of multinomial logistic regression model,
 % with "full" or overparametrized weights,  so all k classes have a weight
@@ -27,6 +27,13 @@ function [negL,dnegL,H] = neglogli_multinomGLM_full(wts,X,Y)
 %
 % - Output Y should be represented as a binary matrix of size N x k-1,
 %   with '1' indicating the class 2 to k, or all-zeros for class 1.
+%
+% Notes:
+% ------
+%
+% - Constant ('offset' or 'bias') not added explicitly, so regressors X
+%   should include a column of 1's to incorporate a constant.
+
 
 [nT,nX] = size(X); % number of predictors (dimensionality of input space)
 nclass = size(Y,2); % number of classes
