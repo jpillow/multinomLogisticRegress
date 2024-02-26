@@ -6,8 +6,8 @@
 setpaths; 
 
 % set up weights
-nxdim = 100;  % number of input dimensions 
-nclass = 10;  % number of output classes
+nxdim = 25;  % number of input dimensions 
+nclass = 20;  % number of output classes
 nsamp = 1500; % number of samples to draw
 lambda_ridge = 100; % ridge parameter (inverse prior variance)
 
