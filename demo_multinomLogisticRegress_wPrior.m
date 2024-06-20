@@ -6,9 +6,9 @@
 setpaths; 
 
 % set up weights
-nxdim = 25;  % number of input dimensions 
-nclass = 20;  % number of output classes
-nsamp = 1500; % number of samples to draw
+nxdim = 55;  % number of input dimensions 
+nclass = 72;  % number of output classes
+nsamp = nclass*50; % number of samples to draw
 lambda_ridge = 100; % ridge parameter (inverse prior variance)
 
 % Sample weights from a Gaussian
@@ -43,7 +43,7 @@ w0red = w0full(:,2:end)-w0full(:,1); % reduced weights
 lfun1 = @(w)(neglogli_multinomGLM_reduced(w,xinput,yy)); % neglogli function handle (reduced)
 
 % Check accuracy of Hessian and Gradient (if desired)
-HessCheck(lfun1,w0red(:));
+% HessCheck(lfun1,w0red(:));
 
 % Set optimization parameters and perform optimization
 opts = optimoptions('fminunc','algorithm','trust-region','SpecifyObjectiveGradient',true,...
@@ -53,7 +53,9 @@ fprintf('\n---------------------------------------------------------------------
 fprintf('Computing "reduced" ML estimate of multinomial logistic regression weights...\n');
 fprintf('-------------------------------------------------------------------------\n');
 
+tic;
 wML1 = fminunc(lfun1,w0red(:),opts); % optimize negative log-posterior
+toc;
 
 %% 2b. Compute MAP weights, reduced parametrization
 
@@ -64,27 +66,30 @@ Cinv_red = speye(nxdim*(nclass-1))*lambda_ridge/3; % Note: not yet sure how to m
 lfun1_map = @(w)(neglogpost_multinomGLM_reduced(w,xinput,yy,Cinv_red)); % neglogli function handle (reduced)
 
 % Check accuracy of Hessian and Gradient (if desired)
-HessCheck(lfun1_map,w0red(:));
+% HessCheck(lfun1_map,w0red(:));
 
 fprintf('\n-------------------------------------------------------------------------\n');
 fprintf('Computing "reduced" MAP estimate of multinomial logistic regression weights...\n');
 fprintf('-------------------------------------------------------------------------\n');
 
+tic;
 wMAP1 = fminunc(lfun1_map,w0red(:),opts); % optimize negative log-posterior
-
+toc;
 
 %% 3a. Compute ML estimate of weights, full parametrization
 
 lfun2 = @(w)(neglogli_multinomGLM_full(w,xinput,yy)); % neglogli function handle (full)
 
 % Check accuracy of Hessian and Gradient (if desired)
-HessCheck(lfun2,w0full(:));
+% HessCheck(lfun2,w0full(:));
 
 fprintf('\n-------------------------------------------------------------------------\n');
 fprintf('Computing "full" ML estimate of multinomial logistic regression weights...\n');
 fprintf('-------------------------------------------------------------------------\n');
 
+tic;
 wML2 = fminunc(lfun2,w0full(:),opts); % optimize negative log-posterior
+toc;
 
 %% 3b. Compute MAP weights, full parametrization
 
@@ -95,14 +100,15 @@ Cinv_full = speye(nxdim*nclass)*lambda_ridge;
 lfun2_map = @(w)(neglogpost_multinomGLM_full(w,xinput,yy,Cinv_full)); % neglogli function handle (reduced)
 
 % Check accuracy of Hessian and Gradient (if desired)
-HessCheck(lfun2_map,w0full(:));
+% HessCheck(lfun2_map,w0full(:));
 
 fprintf('\n-------------------------------------------------------------------------\n');
 fprintf('Computing "reduced" MAP estimate of multinomial logistic regression weights...\n');
 fprintf('-------------------------------------------------------------------------\n');
 
+tic;
 wMAP2 = fminunc(lfun2_map,w0full(:),opts); % optimize negative log-posterior
-
+toc;
 
 %% 4.Compare fits to true weights
 
