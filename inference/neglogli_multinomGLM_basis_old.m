@@ -1,4 +1,4 @@
-function [negL,dnegL,H] = neglogli_multinomGLM_basis(wts,X,Y,B)
+function [negL,dnegL,H] = neglogli_multinomGLM_basis_old(wts,X,Y,B)
 % [negL,dnegL,H] = neglogli_multinomGLM_basis(wts,X,Y,B)
 %
 % Compute negative log-likelihood of multinomial logistic regression model,
@@ -60,32 +60,43 @@ elseif nargout >= 2  % compute gradient
     
     if nargout > 2   % compute Hessian
 
-        % =================================================
-        % Compute full Hessian and then project onto basis
-        % =================================================        
-        
-        % First term: sum(B*diag(df(ii,:))*B' \kron X_i X_i^T)
-       
-        % Compute stimulus weighted by df for each class
-        Xdf = reshape(X.*reshape(df,[],1,nclass),nT,nw);
+%         % =================================================
+%         % Compute full Hessian and then project onto basis
+%         % =================================================        
+%         % Compute stimulus weighted by df for each class
+%         Xdf = reshape(X.*reshape(df,[],1,nclass),nT,nw);
+%         
+%         % Compute center block-diagonal portion 
+%         H1 = zeros(nw); 
+%         XXdf = X'*Xdf; % blocks along center 
+%         for jj = 1:nclass
+%             inds = (jj-1)*nX+1:jj*nX;
+%             H1(inds,inds) = XXdf(:,inds);
+%         end
+%         % compute off-diagonal part
+%         H2 = -Xdf'*Xdf;
+%         H = H1 + H2;
+% 
+%         % map to space of W
+%         Bkron = kron(B',eye(nX));
+%         H = Bkron'*H*Bkron;
 
-        % Compute center block-diagonal of full Hessian (not in basis)
-        H1submatrices = cell(nclass,1);  % pre-allocate cell array
-        XXdf = X'*Xdf; % blocks along center 
-        for jj = 1:nclass
-            inds = (jj-1)*nX+1:jj*nX; % indices for each block
-            H1submatrices{jj} = sparse(XXdf(:,inds)); % insert each block
-        end
+        % ====================================
+        % Now attempt to do it more efficiently
+        % ====================================
 
-        % Project onto basis
-        Bkron = kron(B',speye(nX)); % basis matrix
-        H1 = Bkron'*blkdiag(H1submatrices{:})*Bkron; % first term
+        % First term: sum(B*diag(df(ii,:))*B' \kron X_i X_i^T) 
+        BdfBtrp = pagemtimes(df.*reshape(B',1,nclass,nbasis),B'); % compute B * diag(df) * B'
+        BdfBtrp = reshape(BdfBtrp,nT,1,nbasis^2); % reshape into matrix
+        H1 = X'*reshape(X.*BdfBtrp,nT,nX*nbasis^2); % left and right multiply by X
+        H1 = reshape(H1,nX,nX,nbasis,nbasis); % reshape into 4-tensor
+        H1 = permute(H1,[1,3,2,4]);  % flip 2nd and 3rd dimension 
+        H1 = reshape(H1,nX*nbasis,nX*nbasis); % convert to a single matrix of correct shape
                 
         % Second term: - (X * df *B')' (X df * B')   
-        XdfB = reshape(X.*reshape((df*B'),[],1,nbasis),nT,nbw);
-        H2 = -XdfB'*XdfB;  % second term
+        Xdf = reshape(X.*reshape((df*B'),[],1,nbasis),nT,nbw);
+        H2 = -Xdf'*Xdf;
          
-        % Sum together to get full Hessian
         H = H1 + H2;
 
     end

@@ -6,17 +6,17 @@
 setpaths; 
 
 % set up weights
-nxdim = 56;  % number of input dimensions 
+nxdim = 50;  % number of input dimensions 
 nclass = 72;  % number of output classes
-nbdim = 13;    % number of dimensions in basis
-nsamp = nclass*50; % number of samples to draw
+nbdim = 5;    % number of dimensions in basis
+nsamp = nclass*100; % number of samples to draw
 
 % Make Basis across classes
-B = gsmooth(randn(nclass,nbdim),1);
+B = gsmooth(randn(nclass,nbdim),3);
 B = orth(B)';  % basis for the rows of wts
 
 %% Sample weights from a Gaussian
-wbasis = randn(nxdim,nbdim)/sqrt(nxdim);  % basis weights
+wbasis = 3*randn(nxdim,nbdim)/sqrt(nxdim);  % basis weights
 wtrue = wbasis*B;  % full matrix of true weights
 
 % make inputs 
@@ -63,24 +63,24 @@ tic;
 wML1 = fminunc(lfun1,w0(:),opts); % optimize negative log-posterior
 toc;
 
+
 %% 3b. Compute ML weights using basis
 
 % Set loss function
 lfun2 = @(wb)(neglogli_multinomGLM_basis(wb,xinput,yy,B)); % neglogli function handle w/ basis
 
 % Check accuracy of Hessian and Gradient (if desired)
-% HessCheck(lfun2,wb0(:));
-
+HessCheck(lfun2,wbasis0(:));
 
 fprintf('\n-------------------------------------------------------------------------\n');
 fprintf('Computing ML estimate in basis.....\n');
 fprintf('-------------------------------------------------------------------------\n');
 
 tic;
-wML2basis = fminunc(lfun2,wbasis0(:),opts); % optimize negative log-posterior
+wML2basis = fminunc(lfun2,wbasis0(:),opts); % optimize negative log-posterior in basis
 toc;
 
-wML2 = reshape(wML2basis,nxdim,nbdim)*B;
+wML2 = reshape(wML2basis,nxdim,nbdim)*B; % reconstruct full weights using basis
 
 %% 4.Compare fits to true weights
  
@@ -96,14 +96,15 @@ wML2 = wML2- wML2(:,1); % substract off class-1 weights
 % %  --------- Make plots --------
 nw = nxdim*nclass; % number of total weights
 xlim = [nxdim+1, nxdim*2];
- 
+
 subplot(3,1,2:3);
-plot(1:nw, wtrue_reduced(:), 1:nw, wML1(:), 1:nw, wML2(:));
+pltinds = 1:nclass;
+plot(pltinds, wtrue_reduced(2,:), pltinds, wML1(2,:), pltinds, wML2(2,:));
 legend('true', 'ML', 'ML w basis', 'location', 'northwest');
-set(gca,'xlim', xlim);
+%set(gca,'xlim', xlim);
 title('ML estimates')
- 
- 
+
+
 % ---  Report results (R^2) ------------------
 r2fun = @(w)(1-sum((wtrue_reduced(:)-w(:)).^2)/sum(wtrue_reduced(:).^2));
 R2ml1 = r2fun(wML1);
@@ -112,4 +113,4 @@ R2ml2 = r2fun(wML2);
 fprintf('      ML estimate R^2: %7.3f\n',R2ml1);
 fprintf('ML-basis estimate R^2: %7.3f\n',R2ml2);
 
-% 
+
