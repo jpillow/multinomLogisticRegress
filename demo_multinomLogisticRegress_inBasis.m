@@ -1,7 +1,7 @@
-% demo_multinomLogisticRegress.m
+% demo_multinomLogisticRegress_inBasis.m
 %
-% Multinomial logistic regression observations (multinomial GLM) with GP
-% prior over rows of weight matrix
+% Multinomial logistic regression observations (multinomial GLM) with a
+% basis for the rows of the weight matrix
 
 setpaths; 
 
