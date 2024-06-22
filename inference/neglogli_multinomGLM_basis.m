@@ -1,5 +1,5 @@
-function [negL,dnegL,H] = neglogli_multinomGLM_basis(wts,X,Y,B)
-% [negL,dnegL,H] = neglogli_multinomGLM_basis(wts,X,Y,B)
+function [negL,dnegL,H] = neglogli_multinomGLM_basis(wts,X,Y,Bmat)
+% [negL,dnegL,H] = neglogli_multinomGLM_basis(wts,X,Y,Bmat)
 %
 % Compute negative log-likelihood of multinomial logistic regression model
 % with a single shared basis for the rows of the weight matrix
@@ -8,7 +8,7 @@ function [negL,dnegL,H] = neglogli_multinomGLM_basis(wts,X,Y,B)
 %    wts [d*nb,1] - basis weights (rows) for each input dimension (cols)
 %      X [T,d]   - design matrix of regressors
 %      Y [T,k]   - output (one-hot vector on each row indicating class)
-%      B [nb,k]  - basis for rows of W matrix
+%   Bmat [nb,k]  - basis for rows of W matrix
 %
 % Outputs:
 %    negL [1,1] - negative loglikelihood
@@ -40,7 +40,7 @@ nbw = nX*nbasis;       % # of basis weights
 
 % Reshape GLM weights into a matrix
 wb = reshape(wts,nX,nbasis); % reshape basis weights into a matrix
-ww = wb*B;  % make matrix of model weights
+ww = wb*Bmat;  % make matrix of model weights
 
 % Compute projection of stimuli onto weights
 xproj = X*ww;
@@ -52,7 +52,7 @@ elseif nargout >= 2  % compute gradient
     [f,df] = logsumexp(xproj); % evaluate log-normalizer & deriv
     
     negL = -sum(sum(Y.*xproj)) + sum(f); % neg log-likelihood
-    dnegL = reshape(X'*(df-Y)*B',[],1);     % gradient
+    dnegL = reshape(X'*(df-Y)*Bmat',[],1);     % gradient
     
     if nargout > 2   % compute Hessian
 
@@ -74,11 +74,11 @@ elseif nargout >= 2  % compute gradient
         end
 
         % Project onto basis
-        Bkron = kron(B',speye(nX)); % basis matrix
+        Bkron = kron(Bmat',speye(nX)); % basis matrix
         H1 = Bkron'*blkdiag(H1submatrices{:})*Bkron; % first term
                 
         % Second term: - (X * df *B')' (X df * B')   
-        XdfB = reshape(X.*reshape((df*B'),[],1,nbasis),nT,nbw);
+        XdfB = reshape(X.*reshape((df*Bmat'),[],1,nbasis),nT,nbw);
         H2 = -XdfB'*XdfB;  % second term
          
         % Sum together to get full Hessian

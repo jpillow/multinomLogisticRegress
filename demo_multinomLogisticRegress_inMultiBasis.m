@@ -21,7 +21,7 @@ wtrue_mat = zeros(nxdim,nclass); % allocate space for true weights
 for jj = 1:nxdim
     B1 = gsmooth(randn(nclass,nbasis(jj)),3);  % make a smooth random basis
     B1 = orth(B1)';  % basis for the rows of wts
-    Bases_all{jj} = B1;
+    Bases_all{jj} = sparse(B1);
     basiswts_all{jj} = 3*randn(nbasis(jj),1);
     wtrue_mat(jj,:) = basiswts_all{jj}'*B1;
 end
@@ -37,7 +37,7 @@ wtrue_vec = basiswts_vec'*Bmat;  % vector of all weights
 
 % Massage into a basis for the columns of the weights
 P = makeRowColPermMatrix(nclass,nxdim);  % column-row permutation matrix
-Bmat_cols = P*sparse(Bmat');  % basis matrix for columns of weight matrix
+Bmat_cols = P*Bmat';  % basis matrix for columns of weight matrix
 
 % % Check that these match
 % wtrue_mat2 = Bmat_cols*basiswts_vec;
