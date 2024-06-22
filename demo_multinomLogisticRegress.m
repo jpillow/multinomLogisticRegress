@@ -7,7 +7,7 @@ setpaths;
 
 % set up weights
 nxdim = 10;  % number of input dimensions 
-nclass = 5;  % number of output classes
+nclass = 7;  % number of output classes
 nsamp = 5e3; % number of samples to draw
 
 % Sample weights from a Gaussian

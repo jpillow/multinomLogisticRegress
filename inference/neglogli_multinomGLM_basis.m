@@ -1,9 +1,8 @@
 function [negL,dnegL,H] = neglogli_multinomGLM_basis(wts,X,Y,B)
 % [negL,dnegL,H] = neglogli_multinomGLM_basis(wts,X,Y,B)
 %
-% Compute negative log-likelihood of multinomial logistic regression model,
-% with "full" or overparametrized weights,  so all k classes have a weight
-% vector 
+% Compute negative log-likelihood of multinomial logistic regression model
+% with a single shared basis for the rows of the weight matrix
 %
 % Inputs:
 %    wts [d*nb,1] - basis weights (rows) for each input dimension (cols)
@@ -26,11 +25,8 @@ function [negL,dnegL,H] = neglogli_multinomGLM_basis(wts,X,Y,B)
 % 
 % - Design matrix X should include a column of 1s to incorporate a constant
 %
-% - Output Y should be represented as a binary matrix of size N x k-1,
-%   with '1' indicating the class 2 to k, or all-zeros for class 1.
-%
-% Notes:
-% ------
+% - Output Y should be represented as a binary matrix of size N x k,
+%   with '1' indicating the class 1 to k
 %
 % - Constant ('offset' or 'bias') not added explicitly, so regressors X
 %   should include a column of 1's to incorporate a constant.
@@ -71,10 +67,10 @@ elseif nargout >= 2  % compute gradient
 
         % Compute center block-diagonal of full Hessian (not in basis)
         H1submatrices = cell(nclass,1);  % pre-allocate cell array
-        XXdf = X'*Xdf; % blocks along center 
+        XXdf = sparse(X'*Xdf); % blocks along center 
         for jj = 1:nclass
             inds = (jj-1)*nX+1:jj*nX; % indices for each block
-            H1submatrices{jj} = sparse(XXdf(:,inds)); % insert each block
+            H1submatrices{jj} = XXdf(:,inds); % insert each block
         end
 
         % Project onto basis

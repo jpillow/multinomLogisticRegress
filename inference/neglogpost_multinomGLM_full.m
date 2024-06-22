@@ -38,9 +38,8 @@ function [L,dL,ddL] = neglogpost_multinomGLM_full(wts,X,Y,Cinv)
 %   columns of w and we would not change the log-likelihood
 % 
 % - Design matrix X should include a column of 1s to incorporate a constant
-%
-% - Output Y should be represented as a binary matrix of size N x k-1,
-%   with '1' indicating the class 2 to k, or all-zeros for class 1.
+
+
 %
 % Notes:
 % ------

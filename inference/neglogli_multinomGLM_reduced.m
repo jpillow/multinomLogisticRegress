@@ -31,8 +31,7 @@ function [negL,dnegL,H] = neglogli_multinomGLM_reduced(wts,X,Y)
 %
 % - assumes weights for 1st class are 0.  So wts(:,j) are for class j+1
 %
-% - Constant ('offset' or 'bias') not added explicitly, so regressors X
-%   should include a column of 1's to incorporate a constant.
+% - Design matrix X should include a column of 1s to incorporate a constant
 
 % Process inputs
 [nT,nX] = size(X);      % # of trials, # of predictors (# input dims)
