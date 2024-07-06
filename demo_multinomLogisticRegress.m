@@ -1,7 +1,6 @@
 % demo_multinomLogisticRegress.m
 %
-% Multinomial logistic regression observations (multinomial GLM) with GP
-% prior over rows of weight matrix
+% Max likelihood estim for multinomial logistic regression (multinomial GLM) 
 
 setpaths; 
 
