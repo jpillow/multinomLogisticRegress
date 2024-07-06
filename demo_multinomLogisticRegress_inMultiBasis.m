@@ -6,9 +6,9 @@
 setpaths;  % add necessary paths
 
 % Set up model dimensions
-nxdim = 60;  % number of input dimensions (neurons)
-nclass = 25;  % number of output classes
-nbasis = [5,13,3*ones(1,nxdim-2)];  % number of dimensions in each basis
+nxdim = 5;  % number of input dimensions (neurons)
+nclass = 11;  % number of output classes
+nbasis = [5,7,3*ones(1,nxdim-2)];  % number of dimensions in each basis
 nbasis = min(nbasis,nclass);  % make sure # basis vectors  < # classes
 nsamp = nclass*100; % number of samples to draw
 nbasiswts = sum(nbasis);  % total number of basis coefficients

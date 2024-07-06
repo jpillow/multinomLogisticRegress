@@ -6,9 +6,9 @@ function Hv = neglogli_multinomGLM_HessMultFun(df,Vvec,X)
 % as wts)
 %
 % Inputs:
-%    M.X  [T,d]  - design matrix of regressors
-%    M.df [T,k]  - matrix of 1st derivatives of soft-max function
-%      v [d*k,1] - vector (length ndims * nclasses) to multiply by Hessian
+%      df [T,k]  - matrix of 1st derivatives of soft-max function
+%    Vvec [d*k,1] - vector (length ndims * nclasses) to multiply by Hessian
+%       X [T,d]  - design matrix of regressors
 %
 % Outputs:
 %    Hv [d*k,1] - Hessian times v
