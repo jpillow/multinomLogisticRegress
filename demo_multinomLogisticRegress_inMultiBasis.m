@@ -86,6 +86,7 @@ fprintf('\n---------------------------------------------------------------------
 fprintf('Computing ML estimate...\n');
 fprintf('-------------------------------------------------------------------------\n');
 
+% Compute ML estimate
 tic;
 wML1 = fminunc(lfun1,w0(:),opts); % optimize negative log-posterior
 toc;
@@ -104,10 +105,12 @@ fprintf('\n---------------------------------------------------------------------
 fprintf('Computing ML estimate in basis.....\n');
 fprintf('-------------------------------------------------------------------------\n');
 
+% Compute ML estimate in basis
 tic;
 wML2basis = fminunc(lfun2,wbasis0(:),opts); % optimize negative log-posterior in basis
 toc;
 
+% multiply by basis to obtain weights in weight space
 wML2 = reshape(Bmat_cols*wML2basis,nxdim,nclass); % reconstruct full weights using basis
 
 %% 4.Compare fits to true weights

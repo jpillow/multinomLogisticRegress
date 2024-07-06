@@ -46,39 +46,40 @@ lfun1 = @(w)(neglogli_multinomGLM_full(w,xinput,yy)); % neglogli function handle
 opts1 = optimoptions('fminunc','algorithm','trust-region','SpecifyObjectiveGradient',true,...
     'HessianFcn','objective','display','iter');
 
+% Compute ML estimate
 fprintf('\n-------------------------------------------------------------------------\n');
 fprintf('Computing ML estimate of multinomial logistic regression weights...\n');
 fprintf('-------------------------------------------------------------------------\n');
-
 tic;
 wML1 = fminunc(lfun1,w0(:),opts1); % optimize negative log-posterior
 toc;
 
 %% 3. Compute ML estimate of weights using HessMult
 
-[negL,dnegL,H] = lfun1(w0);
-
-
+% Set loss function
 lfun2 = @(w)(neglogli_multinomGLM_HessMult(w,xinput,yy)); % neglogli function handle (full)
-
+% Set HessMult Function
 HessMultFun = @(df,v)neglogli_multinomGLM_HessMultFun(df,v,xinput);
 
 % Set optimization parameters and perform optimization
 opts2 = optimoptions('fminunc','algorithm','trust-region','SpecifyObjectiveGradient',true,'display','iter',...
-    'HessianFcn',[],'HessianMultiplyFcn',HessMultFun);
+    'HessianMultiplyFcn',HessMultFun);
 
 % % % Check that Hmult function is correct
 % % % -------------------------------------
+% [negL,dnegL,H] = lfun1(w0);
 % [negL2,dnegL2,Hinfo] = lfun2(w0(:));
 % vtest = randn(nwts,1);
 % Hv = HessMultFun(Hinfo,vtest);
 % [H*vtest, Hv]
 
+% Compute ML estimate using HessMult trick
+fprintf('\n-------------------------------------------------------------------------\n');
+fprintf('Computing ML estimate using HessMult\n');
+fprintf('-------------------------------------------------------------------------\n');
 tic;
 wML2 = fminunc(lfun2,w0(:),opts2); % optimize negative log-posterior
 toc;
-
-
 
 %% 4.Compare fits to true weights
 
@@ -94,7 +95,6 @@ wMLfull2 = wMLfull2 - wMLfull2(:,1); % substract off class-1 weights
 
 
 %  --------- Make plots --------
-
 subplot(231);
 imagesc(1:nclass, 1:nxdim, wtrue_reduced);
 ylabel('input dimension'); xlabel('class');
